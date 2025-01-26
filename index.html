@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Student Performance Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/uuid@latest/dist/umd/uuidv4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .neumorphic {
+            background: linear-gradient(145deg, #f5f7ff, #ffffff);
+            box-shadow: 20px 20px 60px #d1d9e6,
+                       -20px -20px 60px #ffffff;
+            border-radius: 30px;
+        }
+
+        .dark .neumorphic {
+            background: linear-gradient(145deg, #2a2d3a, #1f222e);
+            box-shadow: 20px 20px 60px #1a1d27,
+                       -20px -20px 60px #2e3241;
+        }
+
+        .neumorphic-button {
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            box-shadow: 8px 8px 16px #d1d9e6,
+                       -8px -8px 16px #ffffff;
+            transition: all 0.3s ease;
+            border-radius: 15px;
+        }
+
+        .dark .neumorphic-button {
+            background: linear-gradient(145deg, #2a2d3a, #1f222e);
+            box-shadow: 8px 8px 16px #1a1d27,
+                       -8px -8px 16px #2e3241;
+            color: #ffffff;
+        }
+
+        .neumorphic-input {
+            background: linear-gradient(145deg, #ffffff, #f5f7ff);
+            box-shadow: inset 5px 5px 10px #d1d9e6,
+                       inset -5px -5px 10px #ffffff;
+            border-radius: 12px;
+            border: none;
+            outline: none;
+        }
+
+        .dark .neumorphic-input {
+            background: linear-gradient(145deg, #2a2d3a, #1f222e);
+            box-shadow: inset 5px 5px 10px #1a1d27,
+                       inset -5px -5px 10px #2e3241;
+            color: #ffffff;
+        }
+
+        .slide-up {
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #8B5CF6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .question-card {
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .option-button {
+            transition: all 0.2s ease;
+        }
+
+        .option-button:hover {
+            transform: scale(1.02);
+        }
+
+        .selected {
+            background: #8B5CF6 !important;
+            color: white !important;
+        }
+
+        /* Add smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #8B5CF6;
+            border-radius: 4px;
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: #2a2d3a;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #6D28D9;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-all duration-300">
+    <div class="min-h-screen p-4 md:p-8">
+        <!-- Theme Toggle -->
+        <button id="themeToggle" class="fixed top-4 right-4 z-50 neumorphic-button p-3 rounded-full">
+            <i class="bi bi-moon-fill text-xl text-purple-600 dark:text-purple-400"></i>
+        </button>
+
+        <!-- Main Container -->
+        <div class="max-w-4xl mx-auto neumorphic p-6 md:p-8">
+            <!-- Header -->
+            <div class="text-center mb-8 slide-up">
+                <h1 class="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+                    AI Student Performance Analysis
+                </h1>
+                <p class="text-gray-600 dark:text-gray-300">Your Personal AI Academic Mentor</p>
+            </div>
+
+            <!-- Form Steps -->
+            <div id="formSteps" class="space-y-8">
+                <!-- Step 1: Basic Info -->
+                <div id="step1" class="slide-up">
+                    <h2 class="text-2xl font-semibold mb-6 text-purple-600 dark:text-purple-400">Personal Information</h2>
+                    <div class="space-y-4">
+                        <input type="text" placeholder="Full Name" class="w-full p-4 neumorphic-input" id="studentName">
+                        <select class="w-full p-4 neumorphic-input" id="gender">
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <select class="w-full p-4 neumorphic-input" id="educationLevel" onchange="updateSubjects()">
+                            <option value="">Select Education Level</option>
+                            <option value="ssc">SSC (10th)</option>
+                            <option value="intermediate">Intermediate</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Step 2: Academic Details -->
+                <div id="academicDetails" class="hidden slide-up">
+                    <h2 class="text-2xl font-semibold mb-6 text-purple-600 dark:text-purple-400">Academic Details</h2>
+                    <div id="subjectsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Subjects will be dynamically added here -->
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between mt-8">
+                    <button onclick="prevStep()" id="prevBtn" class="neumorphic-button px-6 py-3 text-purple-600 dark:text-purple-400 hidden">
+                        <i class="bi bi-arrow-left mr-2"></i> Previous
+                    </button>
+                    <button onclick="nextStep()" id="nextBtn" class="neumorphic-button px-6 py-3 text-purple-600 dark:text-purple-400 ml-auto">
+                        Next <i class="bi bi-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" class="hidden space-y-8">
+                <!-- Loading Spinner -->
+                <div id="loading" class="flex justify-center items-center p-8">
+                    <div class="loading-spinner"></div>
+                </div>
+
+                <!-- AI Analysis -->
+                <div id="aiAnalysis" class="hidden neumorphic p-6 space-y-6">
+                    <!-- AI analysis will be populated here -->
+                </div>
+
+                <!-- Assessment Section -->
+                <div id="assessment" class="hidden space-y-6">
+                    <h2 class="text-2xl font-semibold text-purple-600 dark:text-purple-400">Knowledge Assessment</h2>
+                    <div id="questions" class="space-y-4">
+                        <!-- Questions will be populated here -->
+                    </div>
+                    <button onclick="submitAssessment()" class="neumorphic-button w-full py-3 text-purple-600 dark:text-purple-400">
+                        Submit Assessment
+                    </button>
+                </div>
+
+                <!-- Career Guidance -->
+                <div id="careerGuidance" class="hidden neumorphic p-6 space-y-6">
+                    <!-- Career guidance will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let userId = localStorage.getItem('userId') || uuidv4();
+        localStorage.setItem('userId', userId);
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const icon = themeToggle.querySelector('i');
+            icon.classList.toggle('bi-moon-fill');
+            icon.classList.toggle('bi-sun-fill');
+        });
+
+        const subjects = {
+            ssc: ['Telugu', 'Hindi', 'English', 'Mathematics', 'Physics', 'Biology', 'Social'],
+            intermediate: {
+                MPC: ['Mathematics', 'Physics', 'Chemistry'],
+                BiPC: ['Biology', 'Physics', 'Chemistry'],
+                CEC: ['Commerce', 'Economics', 'Civics'],
+                MEC: ['Mathematics', 'Economics', 'Commerce']
+            }
+        };
+
+        function updateSubjects() {
+            const educationLevel = document.getElementById('educationLevel').value;
+            const container = document.getElementById('subjectsContainer');
+            container.innerHTML = '';
+
+            if (educationLevel === 'ssc') {
+                subjects.ssc.forEach(subject => {
+                    addSubjectInput(subject);
+                });
+            } else if (educationLevel === 'intermediate') {
+                // Add stream selection first
+                const streamSelect = document.createElement('select');
+                streamSelect.className = 'w-full p-4 neumorphic-input';
+                streamSelect.id = 'stream';
+                streamSelect.innerHTML = `
+                    <option value="">Select Stream</option>
+                    ${Object.keys(subjects.intermediate).map(stream => 
+                        `<option value="${stream}">${stream}</option>`
+                    ).join('')}
+                `;
+                streamSelect.onchange = () => {
+                    const stream = streamSelect.value;
+                    container.innerHTML = '';
+                    container.appendChild(streamSelect);
+                    if (stream) {
+                        subjects.intermediate[stream].forEach(subject => {
+                            addSubjectInput(subject);
+                        });
+                    }
+                };
+                container.appendChild(streamSelect);
+            }
+        }
+
+        function addSubjectInput(subject) {
+            const container = document.getElementById('subjectsContainer');
+            const div = document.createElement('div');
+            div.className = 'space-y-2';
+            div.innerHTML = `
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">${subject}</label>
+                <input type="number" min="0" max="100" 
+                    class="w-full p-4 neumorphic-input" 
+                    placeholder="Enter marks" 
+                    id="${subject.toLowerCase()}_marks">
+            `;
+            container.appendChild(div);
+        }
+
+        function nextStep() {
+            if (currentStep === 1) {
+                const name = document.getElementById('studentName').value;
+                const gender = document.getElementById('gender').value;
+                const education = document.getElementById('educationLevel').value;
+
+                if (!name || !gender || !education) {
+                    alert('Please fill all fields');
+                    return;
+                }
+
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('academicDetails').classList.remove('hidden');
+                document.getElementById('prevBtn').classList.remove('hidden');
+                currentStep = 2;
+            } else if (currentStep === 2) {
+                submitData();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep === 2) {
+                document.getElementById('step1').classList.remove('hidden');
+                document.getElementById('academicDetails').classList.add('hidden');
+                document.getElementById('prevBtn').classList.add('hidden');
+                currentStep = 1;
+            }
+        }
+
+        async function submitData() {
+            const formData = {
+                name: document.getElementById('studentName').value,
+                gender: document.getElementById('gender').value,
+                educationLevel: document.getElementById('educationLevel').value,
+                stream: document.getElementById('stream')?.value || null,
+                marks: {}
+            };
+
+            // Collect marks
+            const educationLevel = formData.educationLevel;
+            if (educationLevel === 'ssc') {
+                subjects.ssc.forEach(subject => {
+                    const marks = document.getElementById(`${subject.toLowerCase()}_marks`).value;
+                    formData.marks[subject] = marks;
+                });
+            } else if (educationLevel === 'intermediate' && formData.stream) {
+                subjects.intermediate[formData.stream].forEach(subject => {
+                    const marks = document.getElementById(`${subject.toLowerCase()}_marks`).value;
+                    formData.marks[subject] = marks;
+                });
+            }
+
+            document.getElementById('formSteps').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+
+            try {
+                const aiResponse = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer xjf940dHoLRuOToL4K1y7YtCeeJ3',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [{
+                            role: 'user',
+                            content: [{
+                                type: 'text',
+                                text: `Analyze this student's performance and provide a detailed report with strengths, weaknesses, and career recommendations: ${JSON.stringify(formData)}`
+                            }]
+                        }]
+                    })
+                });
+
+                const analysisData = await aiResponse.json();
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('aiAnalysis').classList.remove('hidden');
+                document.getElementById('aiAnalysis').innerHTML = `
+                    <div class="prose dark:prose-invert max-w-none">
+                        ${marked.parse(analysisData.message)}
+                    </div>
+                `;
+
+                generateAssessment(formData);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        async function generateAssessment(formData) {
+            try {
+                const aiResponse = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer xjf940dHoLRuOToL4K1y7YtCeeJ3',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [{
+                            role: 'user',
+                            content: [{
+                                type: 'text',
+                                text: `Generate 20 multiple-choice questions based on this student's academic background. Focus more on subjects where they performed well: ${JSON.stringify(formData)}`
+                            }]
+                        }]
+                    })
+                });
+
+                const questionsData = await aiResponse.json();
+                const questions = JSON.parse(questionsData.message);
+
+                document.getElementById('assessment').classList.remove('hidden');
+                const questionsContainer = document.getElementById('questions');
+                questionsContainer.innerHTML = questions.map((q, i) => `
+                    <div class="neumorphic p-6 question-card" data-correct="${q.correct}">
+                        <p class="font-medium mb-4">${i + 1}. ${q.question}</p>
+                        <div class="space-y-3">
+                            ${q.options.map((opt, j) => `
+                                <button onclick="selectOption(this)" 
+                                    class="option-button w-full text-left p-3 neumorphic-button" 
+                                    data-question="${i}">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error generating assessment:', error);
+                alert('Error generating assessment. Please try again.');
+            }
+        }
+
+        function selectOption(button) {
+            const questionDiv = button.closest('.question-card');
+            questionDiv.querySelectorAll('.option-button').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            button.classList.add('selected');
+        }
+
+        async function submitAssessment() {
+            let score = 0;
+            const answers = [];
+            document.querySelectorAll('.question-card').forEach((q, i) => {
+                const selected = q.querySelector('.selected')?.textContent.trim();
+                const correct = q.dataset.correct;
+                if (selected === correct) score++;
+                answers.push({
+                    question: i + 1,
+                    selected,
+                    correct,
+                    isCorrect: selected === correct
+                });
+            });
+
+            const percentage = (score / 20) * 100;
+
+            try {
+                const aiResponse = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer xjf940dHoLRuOToL4K1y7YtCeeJ3',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [{
+                            role: 'user',
+                            content: [{
+                                type: 'text',
+                                text: `Based on the assessment score of ${percentage}% and these answers: ${JSON.stringify(answers)}, provide detailed career guidance and a learning roadmap.`
+                            }]
+                        }]
+                    })
+                });
+
+                const guidanceData = await aiResponse.json();
+                
+                document.getElementById('careerGuidance').classList.remove('hidden');
+                document.getElementById('careerGuidance').innerHTML = `
+                    <h3 class="text-xl font-semibold mb-4">Assessment Score: ${percentage}%</h3>
+                    <div class="prose dark:prose-invert max-w-none">
+                        ${marked.parse(guidanceData.message)}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error generating career guidance:', error);
+                alert('Error generating career guidance. Please try again.');
+            }
+        }
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
